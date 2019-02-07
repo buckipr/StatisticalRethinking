@@ -1,0 +1,82 @@
+---
+title: "Notes on the book Statistical Rethinking"
+author: Jason
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+header-includes:
+  - \usepackage{tikz}
+  - \usepackage{ifthen}
+output:
+  pdf_document:
+    fig_width: 5
+    fig_height: 4
+    fig_caption: true
+    highlight: tango
+fontsize: 12pt
+geometry: margin = 1in
+linkcolor: red
+urlcolor: blue
+---
+
+```{r, include = FALSE, echo = FALSE}
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+library(ggplot2)
+```
+
+\newcommand{\rc}{\tikz\draw[black,fill=red] (0,0) circle (.5ex); }
+
+\newcommand{\bc}{\tikz\draw[black,fill=blue] (0,0) circle (.5ex); }
+
+
+# **Chapter 1: The Golem of Prague**
+
+# **Chapter 2: Small Worlds and Large Worlds**
+
+**Useful Example.**  Suppose there is a bag containing marbles.  We *know* there are four marbles in the bag and that each marble
+may be either \textcolor{red}{red} or \textcolor{blue}{blue}.  We get some data in the form of \bc \rc \bc
+We can think of the likelihood as way to count all of the possible ways of producing this sample **given** a conjecture of what
+the bag looks like (i.e., a paramter for our model):
+
+| **Conjecture**   | **Ways of producing sample** |
+|:-----------------|:----------------------------:|
+| \bc \bc \bc \bc | $4 \times 0 \times 4 = 0$ |
+
+```{r, echo = FALSE}
+d <-
+         tibble(position = c((1:4^1) / 4^0,
+                             (1:4^2) / 4^1,
+                             (1:4^3) / 4^2),
+                draw     = rep(1:3, times = c(4^1, 4^2, 4^3)),
+                fill     = rep(c("b", "w"), times = c(1, 3)) %>%
+                  rep(., times = c(4^0 + 4^1 + 4^2)))
+
+lines_1 <-
+                          tibble(x    = rep((1:4), each = 4),
+                                 xend = ((1:4^2) / 4),
+                                 y    = 1,
+                                 yend = 2)
+
+lines_2 <-
+                                   tibble(x    = rep(((1:4^2) / 4), each = 4),
+                                          xend = (1:4^3)/(4^2),
+                                          y    = 2,
+                                          yend = 3)
+
+d %>%
+                                            ggplot(aes(x = position, y = draw)) +
+                                            geom_segment(data  = lines_1,
+                                                         aes(x = x, xend = xend,
+                                                             y = y, yend = yend),
+                                                         size  = 1/3) +
+                                            geom_segment(data  = lines_2,
+                                                         aes(x = x, xend = xend,
+                                                             y = y, yend = yend),
+                                                         size  = 1/3) +
+                                            geom_point(aes(fill = fill),
+                                                       shape = 21, size = 3) +
+                                            scale_y_continuous(breaks = 1:3) +
+                                            scale_fill_manual(values  = c("navy", "white")) +
+                                            theme(panel.grid.minor = element_blank(),
+                                                  legend.position = "none")
+```

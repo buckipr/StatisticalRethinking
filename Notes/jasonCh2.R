@@ -31,3 +31,11 @@ d %>%
         scale_fill_manual(values  = c("navy", "red")) +
         theme(panel.grid.minor = element_blank(), legend.position = "none",
               plot.title = element_text(hjust = 0.5))
+
+#### ---- globePlot
+x <- seq(0,1, length=1000)
+a <- c(1, 2, 2, 3, 4, 5, 5, 6, 6, 7)
+b <- c(1, 1, 2, 2, 2, 2, 3, 3, 4, 4)
+plot(x, dbeta(x, shape1 = a[1], shape2 = b[1]))
+plot(x, dbeta(x, shape1 = a[2], shape2 = b[2]))
+plot(x, dbeta(x, shape1 = a[3], shape2 = b[3]))

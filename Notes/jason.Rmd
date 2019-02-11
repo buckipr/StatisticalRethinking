@@ -41,15 +41,28 @@ read_chunk('jasonCh2.R')
 
 # **Chapter 2: Small Worlds and Large Worlds**
 
-**Useful Example.**  Suppose there is a bag containing marbles.  We *know* there are four marbles in the bag and that each marble
-may be either \textcolor{red}{red} or \textcolor{blue}{blue}.  Next, suppose we observe some data in the form of \bc \rc \bc in
-that exact order (*so sequence matters*). We can think of the likelihood as a way to count all of the possible ways of producing
-this sample **given** a conjecture of what the bag looks like (i.e., a paramter for our model).
+## **Useful Example.**
 
-* Consider one possible conjecture: \bc \rc \rc \rc .  How likely is the observed sample \bc \rc \bc given the conjecture? To answer
-this question, we count the possible ways our conjecture can generate the sample.  Then we will compare the total number of ways across
-different conjectures as a way to evaluate which conjecture is the most likely candidate for generating \bc \rc \bc .  The following
-plot shows all of the possible samples that (the conjecture) \bc \rc \rc \rc can produce:
+Suppose there is a bag containing marbles.  We *know* there are four marbles in the bag and that each marble
+may be either \textcolor{red}{red} or \textcolor{blue}{blue}.
+
+* *Prior belief:* The Bayesian approach always begins with a prior belief about the conjecture -- i.e., how many \textcolor{red}{red}
+marbles are in the bag.  To incorporate a prior belief we must assign a plausiblity to each possibility.  Imagine that we met the owner
+of the bag and they told us that there is a company that makes these bags and the do so in a way that ensure that there is a 15% chance
+that a bag has only 1 \textcolor{blue}{blue} marble, a 50% chance that a bag as 2 \textcolor{blue}{blue} marbles, a 15% chance that a
+bag has 3 \textcolor{blue}{blue} marbles, a 10% chance that a bag has all \textcolor{blue}{blue} marbles, and a 10% chance that the bag
+does not contain any \textcolor{blue}{blue} marbles.  We could use this as our prior belief about the contents of our bag.
+
+* *Data:*  Suppose we repeat the following steps 3 times: shake the bag (randomly distributing the marbles), blindly draw out a marble,
+note the color, and put the marble back in the bag.  Now, suppose this exercise produced the following sequence of marbles \bc \rc \bc
+in that exact order (*so sequence matters*).
+
+* *Likelihood:* We can think of the likelihood as a way to count all of the possible ways of producing this sample **given** a
+conjecture of what the bag looks like.Consider one possible conjecture: \bc \rc \rc \rc .  How likely is the observed sample
+\bc \rc \bc given the conjecture?  To answer this question, we count the possible ways our conjecture can generate the sample.
+Then we will compare the total number of ways across different conjectures as a way to evaluate which conjecture is the most likely
+candidate for generating \bc \rc \bc .  The following plot shows all of the possible samples that (the conjecture) \bc \rc \rc \rc
+can produce:
 
 ```{r, gardenPlot, echo = FALSE, out.width = '100%', fig.height=4, fig.width=6}
 d
@@ -57,17 +70,40 @@ d
 From this figure we see that there are 3 possible ways to generate the observed data. The following table lists all of the ways that
 the 5 possible conjectures could generate the sample \bc \rc \bc:
 
-| **Conjecture**   | **# of ways to produce** \bc \rc \bc |
-|:-----------------|:--------------------------------------:|
-| \bc \rc \rc \rc | $1 \times 3 \times 1 = 3$ |
-| \bc \bc \rc \rc | $2 \times 2 \times 2 = 8$ |
-| \bc \bc \bc \rc | $3 \times 1 \times 3 = 9$ |
-| \bc \bc \bc \bc | $4 \times 0 \times 4 = 0$ |
-| \rc \rc \rc \rc | $0 \times 4 \times 0 = 0$ |
+| **Conjecture**   | **# of ways to produce** \bc \rc \bc |     **% of Total**    |
+|:-----------------|:------------------------------------:|:---------------------:|
+| \bc \rc \rc \rc | $1 \times 3 \times 1 = 3$             | $\frac{3}{20} = .15$  |
+| \bc \bc \rc \rc | $2 \times 2 \times 2 = 8$             | $\frac{8}{20} = .40$  |
+| \bc \bc \bc \rc | $3 \times 1 \times 3 = 9$             | $\frac{9}{20} = .45$  |
+| \bc \bc \bc \bc | $4 \times 0 \times 4 = 0$             | $\frac{0}{20} = .00$  |
+| \rc \rc \rc \rc | $0 \times 4 \times 0 = 0$             | $\frac{0}{20} = .00$  |
 
-* Prior belief.
+* *Bayesian updating & posterior distribution:* We update our prior information using the data, our likelihood, and multiplication.
+The result is a probability distribution for our model parameters, which we can use to make inferences. \newpage
 
-* Bayesian updating & posterior distribution.
+| **Conjecture**   | **Prior** | **Likelihood of** \bc \rc \bc | $\propto$ **Posterior**    | **Rescaled Posterior**     |
+|:-----------------|:---------:|:-----------------------------:|:--------------------------:|---------------------------:|
+| \bc \rc \rc \rc  | $.15$     |  $\frac{3}{20} = .15$         | $.15 \times .15 = .0225$   | $\frac{.0225}{.275} = .082$|
+| \bc \bc \rc \rc  | $.50$     |  $\frac{8}{20} = .40$         | $.50 \times .40 = .2000$   | $\frac{.2}{.275} = .723$   |
+| \bc \bc \bc \rc  | $.15$     |  $\frac{9}{20} = .45$         | $.15 \times .35 = .0525$   | $\frac{.0525}{.275} = .191$|
+| \bc \bc \bc \bc  | $.10$     |  $\frac{0}{20} = .00$         | $.10 \times .00 = .0000$   | $\frac{0}{.275} = .000$    |
+| \rc \rc \rc \rc  | $.10$     |  $\frac{0}{20} = .00$         | $.10 \times .00 = .0000$   | $\frac{0}{.275} = .000$    |
+
+## **Another example of Bayesian updating.**
+
+Consider a small globe that we toss up in the air (so that it spins) and when we catch
+it we note if our right index finger is covering a portion of water (as opposed to land).  This is our parameter of interest,
+i.e., the percent of the globe that is covered in water.  If our prior belief is that all of the probabilities are equally likely,
+then the following figure shows what happens as we toss the ball, observe on outcome and update our prior beliefs.
+
+Assume this is the sequence...W L W W W L W L W
+
+```{r, globePlot, echo = FALSE, out.width = '100%', fig.height=4, fig.width=6}
+g
+```
+
+## Evaluating posterior
+grid, quadratic approximation, and MCMC.
 
 # **Chapter 3**
 

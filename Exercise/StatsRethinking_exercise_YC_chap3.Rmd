@@ -1,0 +1,208 @@
+---
+title: "Statistical Rethinking Exercise - Chapter 3"
+output: pdf_document
+author: Yue - Feb.10, 2018
+fontsize: 11pt
+header-includes:
+- \usepackage{setspace}\onehalfspacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, include=FALSE}
+### install R package
+#install.packages(c("coda", "mvtnorm","devtools"))
+library(devtools)
+#devtools::install_github("rmcelreath/rethinking")
+library(rethinking)
+```
+
+# chapter 3 - Global tossing problem
+## Easy  
+```{r}
+## grid approximation - 
+p_grid<- seq( from=0, to=1, length.out=1000) # define grid
+prior <- rep(1, 1000) # define prior
+w<-6
+n<-9
+likelihood <- dbinom(w, size=n, prob=p_grid) #compute likelihood at each value in grid
+unstd.posterior <- likelihood * prior # compute product of lieklihood and prior
+posterior <- unstd.posterior / sum(unstd.posterior) # standardize the posterior
+plot(posterior ~ p_grid, type = "l",col="darkgreen")
+
+set.seed(100)
+samples <- sample(p_grid, prob=posterior, size=1e4, replace=TRUE) # draw 10000 samples from vector (p_grid) with sample distribution = exact posterior density
+
+#plot density estimate
+par(mfrow=c(1,2))
+plot(samples) # y=proportion, x=#sample
+dens(samples) # y=density, x=proportion
+```  
+3E1-3. intervals of defined boundaries  
+```{r}
+# add up posterior probability given boundaries
+sum(posterior[p_grid<0.2]) 
+sum(samples<0.2) / 1e4
+sum(samples<0.8) / 1e4
+sum(samples>0.2 & samples<0.8) / 1e4
+```  
+3E4-5. intervals of defined mass  
+```{r}
+# boundary given posterior probability mass
+quantile(samples, 0.2)
+quantile(samples, (1-0.2))
+quantile(samples, c(0.2,0.8)) #specify lower/upper bound
+```
+3E6-7. Percentile intervals  
+```{r}
+HPDI(samples, prob=0.66) #highest posterior density interval - narrowest
+PI(samples, prob=0.66) # PI - central
+```  
+
+## Medium  
+**Global tossing example**  
+3M1 Grid approximation, with 8 water out of 15 tosses data   
+```{r}
+w<-8
+n<-15
+p_grid<- seq( from=0, to=1, length.out=1000) # define grid
+prior <- rep(1, 1000) # define prior, flat
+likelihood2 <- dbinom(w, size=n, prob=p_grid) #compute likelihood at each value in grid
+unstd.posterior2 <- likelihood2 * prior # compute product of lieklihood and prior
+posterior2 <- unstd.posterior2 / sum(unstd.posterior2) # standardize the posterior
+```  
+3M2 HPDI  
+```{r}
+set.seed(100)
+samples2 <- sample(p_grid, prob=posterior2, size=1e4, replace=TRUE) # 10000 samples
+dens(samples2) # y=density, x=proportion
+
+HPDI(samples2, prob=0.90) #HPDI 90%
+```  
+3M3-4 Posterior predictive check:  
+simulate the distribution of samples, averaging over the posterior uncertainty in p  
+```{r}
+#3M3
+postpred<-rbinom(1e4, size=15, prob=samples2)
+simplehist(postpred)
+mean(postpred==8)
+
+#3M4
+mean(rbinom(1e4, size=9, prob=samples2)==6)
+```  
+3M5  
+```{r}
+p_grid<- seq( from=0, to=1, length.out=1000) # define grid
+prior2 <- ifelse(test=p_grid<0.5, yes=0, no=1) # define prior, 0 if p<0.5, constant if p>=0.5
+likelihood2 <- dbinom(w, size=n, prob=p_grid) #compute likelihood at each value in grid
+unstd.posterior3 <- likelihood2 * prior2 # compute product of lieklihood and prior
+posterior3 <- unstd.posterior3 / sum(unstd.posterior3) # standardize the posterior
+set.seed(100)
+samples3 <- sample(p_grid, prob=posterior3, size=1e4, replace=TRUE) # 10000 samples
+par(mfrow=c(2,2))
+plot(prior2~p_grid, ylim=c(0, 1.5))
+plot(prior~p_grid, ylim=c(0, 1.5))
+dens(samples3)
+dens(samples2)
+
+HPDI(samples3, prob=0.90) #HPDI 90%
+
+#Predictive check
+par(mfrow=c(1,1))
+postpred2<-rbinom(1e4, size=15, prob=samples3)
+simplehist(postpred2, col="Blue", xlab="Tosses")
+par(new=TRUE)
+simplehist(postpred, axes=FALSE, col="Red", xlab="")
+legend("topright", pch="|", c("new","old"), col=c("Blue","Red"))
+```  
+
+## Hard  
+Data source: https://github.com/rmcelreath/rethinking/tree/master/data  
+1=boy, 0=girl;
+```{r}
+birth1 <- c(1,0,0,0,1,1,0,1,0,1,0,0,1,1,0,1,1,0,0,0,1,0,0,0,1,0,
+0,0,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,0,1,0,0,1,1,0,1,0,0,0,0,0,0,0,
+1,1,0,1,0,0,1,0,0,0,1,0,0,1,1,1,1,0,1,0,1,1,1,1,1,0,0,1,0,1,1,0,
+1,0,1,1,1,0,1,1,1,1)
+birth2 <- c(0,1,0,1,0,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,0,0,1,1,1,0,
+1,1,1,0,1,1,1,0,1,0,0,1,1,1,1,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,0,1,1,0,1,1,0,1,1,1,0,0,0,0,0,0,1,0,0,0,1,1,0,0,1,0,0,1,1,
+0,0,0,1,1,1,0,0,0,0)
+
+data(homeworkch3)
+boy<-sum(birth1) + sum(birth2) #total boys
+n<-length(birth1) + length(birth2)
+
+child<-cbind(birth1, birth2)
+```  
+
+3H1 posterior distribution for the probability of a birth being a boy  
+```{r}
+p_grid <- seq( from=0, to=1, length.out=1000) # define grid
+prior <- rep(1, 1000) # uniform prior
+likelihood <- dbinom(boy, size=n, prob=p_grid) 
+unstd.posterior <- likelihood * prior
+posterior <- unstd.posterior / sum(unstd.posterior) # standardize the posterior
+plot(posterior ~ p_grid, type = "l",col="darkgreen")
+
+p_grid[which.max(posterior)] # parameter value max the posterior probability
+```  
+
+3H2  
+```{r}
+set.seed(100)
+samples <- sample(p_grid, prob=posterior, size=1e4, replace=TRUE) # 10000 samples
+HPDI(samples, prob=c(0.50,0.89,0.97)) 
+```  
+
+3H3  
+```{r}
+postpred <- rbinom(1e4, size=200, prob=samples)
+simplehist(postpred)
+dens(postpred, col="darkgreen")
+abline(v=boy,col="red")
+```
+
+3H4 first birth  
+```{r}
+boy1<-sum(birth1)
+n1 <- length(birth1)
+likelihood1 <- dbinom(boy1, size=n1, prob=p_grid)
+unstd.posterior1 <- likelihood1 * prior
+posterior1 <- unstd.posterior1 / sum(unstd.posterior1) 
+p_grid[which.max(posterior1)]
+set.seed(100)
+samples1 <- sample(p_grid, prob=posterior1, size=1e4, replace=TRUE) # 10000 samples
+postpred1 <- rbinom(n = boy1, size = n1, prob = samples1)
+simplehist(postpred1)
+par(mfrow=c(1,2))
+dens(postpred1, col="darkgreen", xlab="first birth posterior")
+abline(v=boy1,col="red")
+
+#use the 3H3 sample
+postpred2 <- rbinom(n = boy1, size = n1, prob = samples)
+dens(postpred2, col="darkblue", xlab="all birth posterior")
+abline(v=boy1,col="red")
+
+```  
+Does not seem to fit well.  
+
+3H5  
+```{r}
+boy2<-sum(birth2[birth1 == 0])
+n2<-length(birth2[birth1 == 0])
+
+likelihood2 <- dbinom(boy2, size=n2, prob=p_grid)
+unstd.posterior2 <- likelihood2 * prior
+posterior2 <- unstd.posterior2 / sum(unstd.posterior2) 
+p_grid[which.max(posterior2)]
+set.seed(100)
+samples2 <- sample(p_grid, prob=posterior2, size=1e4, replace=TRUE) # 10000 samples
+postpred2 <- rbinom(n = boy2, size = n2, prob = samples2)
+simplehist(postpred2)
+dens(postpred2, col="darkgreen")
+abline(v=boy2,col="red")
+
+plot(posterior2 ~ p_grid, type = "l",col="darkgreen")
+```  

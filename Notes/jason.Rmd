@@ -64,7 +64,7 @@ Then we will compare the total number of ways across different conjectures as a 
 candidate for generating \bc \rc \bc .  The following plot shows all of the possible samples that (the conjecture) \bc \rc \rc \rc
 can produce:
 
-```{r, gardenPlot, echo = FALSE, out.width = '100%', fig.height=4, fig.width=6}
+```{r, gardenPlot, echo = FALSE, out.width = '100%', fig.align = 'center', fig.height=4, fig.width=6}
 d
 ```
 From this figure we see that there are 3 possible ways to generate the observed data. The following table lists all of the ways that
@@ -78,8 +78,13 @@ the 5 possible conjectures could generate the sample \bc \rc \bc:
 | \bc \bc \bc \bc | $4 \times 0 \times 4 = 0$             | $\frac{0}{20} = .00$  |
 | \rc \rc \rc \rc | $0 \times 4 \times 0 = 0$             | $\frac{0}{20} = .00$  |
 
-* *Bayesian updating & posterior distribution:* We update our prior information using the data, our likelihood, and multiplication.
-The result is a probability distribution for our model parameters, which we can use to make inferences. \newpage
+
+* *Bayesian updating & posterior distribution:* We update our prior
+information using the data, our likelihood, and multiplication.  The result is
+a probability distribution for our model parameters, which we can use to make
+inferences.
+
+\newpage
 
 | **Conjecture**   | **Prior** | **Likelihood of** \bc \rc \bc | $\propto$ **Posterior**    | **Rescaled Posterior**     |
 |:-----------------|:---------:|:-----------------------------:|:--------------------------:|---------------------------:|
@@ -91,19 +96,46 @@ The result is a probability distribution for our model parameters, which we can 
 
 ## **Another example of Bayesian updating.**
 
-Consider a small globe that we toss up in the air (so that it spins) and when we catch
-it we note if our right index finger is covering a portion of water (as opposed to land).  This is our parameter of interest,
-i.e., the percent of the globe that is covered in water.  If our prior belief is that all of the probabilities are equally likely,
-then the following figure shows what happens as we toss the ball, observe on outcome and update our prior beliefs.
+Consider a small globe that we toss up in the air (so that it spins) and when
+we catch it we note if our right index finger is covering a portion of water
+(W) or land (L).  Supposes we toss the globe 9 times and obtain the following
+data: W, L, W, W, W, L, W, L, W.  Consider the proportion of the globe that is
+covered with water, the parameter that we want to study.  If our prior belief
+is that all of the proportions from 0 to 1 are equally likely, then the
+following figure shows what happens as we toss the ball, observe on outcome,
+and update our prior beliefs.
 
-Assume this is the sequence...W L W W W L W L W
-
-```{r, globePlot, echo = FALSE, out.width = '100%', fig.height=4, fig.width=6}
-g
+```{r, globePlot, echo = FALSE, out.width = '100%', fig.align = 'center', fig.height = 6.5, fig.width = 6.5}
 ```
 
 ## Evaluating posterior
-grid, quadratic approximation, and MCMC.
+
+In the previous figure, we used an analytic solution to show the resul of
+updating our beliefs.  For many problems, such an analytic solution does not
+exist and we need to use other methods to perform inference on the parameters
+of interest.  Three such methods are covered in this text
+
+1. Grid approximation
+1. Quadratic approximation
+1. Monte carlo markov chain (MCMC)
+
+Here we illustrate the grid and quadratic approximations using the globe
+example.
+
+```{r, echo = TRUE, include = TRUE}
+p_grid <- seq(0, 1, length = 20)
+#prior <- rep(1, 20)
+prior <- rep(c(1,2,1), c(5,10,5))
+likelihood <- dbinom(6, 9, prob = p_grid)
+unstd_post <- likelihood * prior
+posterior <- unstd_post / sum(unstd_post)
+summary(posterior)
+summary(dbeta(p_grid, 7, 4)/)
+#plot(p_grid, posterior, type = 'b')
+#posterior
+#dbeta(p_grid, 7, 4)/ sum(dbeta(p_grid, 7, 4))
+#lines(p_grid, dbeta(p_grid, 7, 4)/ sum(dbeta(p_grid, 7, 4)), col = 'red')
+```
 
 # **Chapter 3**
 

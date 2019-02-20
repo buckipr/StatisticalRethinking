@@ -79,10 +79,8 @@ the 5 possible conjectures could generate the sample \bc \rc \bc:
 | \rc \rc \rc \rc | $0 \times 4 \times 0 = 0$             | $\frac{0}{20} = .00$  |
 
 
-* *Bayesian updating & posterior distribution:* We update our prior
-information using the data, our likelihood, and multiplication.  The result is
-a probability distribution for our model parameters, which we can use to make
-inferences.
+* *Bayesian updating & posterior distribution:* We update our prior information using the data, our likelihood, and multiplication.
+The result is a probability distribution for our model parameters, which we can use to make inferences.
 
 \newpage
 
@@ -96,47 +94,89 @@ inferences.
 
 ## **Another example of Bayesian updating.**
 
-Consider a small globe that we toss up in the air (so that it spins) and when
-we catch it we note if our right index finger is covering a portion of water
-(W) or land (L).  Supposes we toss the globe 9 times and obtain the following
-data: W, L, W, W, W, L, W, L, W.  Consider the proportion of the globe that is
-covered with water, the parameter that we want to study.  If our prior belief
-is that all of the proportions from 0 to 1 are equally likely, then the
-following figure shows what happens as we toss the ball, observe on outcome,
-and update our prior beliefs.
+Consider a small globe that we toss up in the air (so that it spins) and when we catch it we note if our right index finger is covering
+a portion of water (W) or land (L).  Supposes we toss the globe 9 times and obtain the following data: W, L, W, W, W, L, W, L, W.  Consider
+the proportion of the globe that is covered with water, the parameter that we want to study.  If our prior belief is that all of the
+proportions from 0 to 1 are equally likely, then the following figure shows what happens as we toss the ball, observe on outcome, and update
+our prior beliefs.
 
 ```{r, globePlot, echo = FALSE, out.width = '100%', fig.align = 'center', fig.height = 6.5, fig.width = 6.5}
 ```
 
 ## Evaluating posterior
 
-In the previous figure, we used an analytic solution to show the resul of
-updating our beliefs.  For many problems, such an analytic solution does not
-exist and we need to use other methods to perform inference on the parameters
-of interest.  Three such methods are covered in this text
+In the previous figure, we used an analytic solution to show the result of updating our beliefs.  For many problems, such an analytic solution
+does not exist and we need to use other methods to perform inference on the parameters of interest.  Three such methods are covered in this
+text:
 
 1. Grid approximation
 1. Quadratic approximation
 1. Monte carlo markov chain (MCMC)
 
-Here we illustrate the grid and quadratic approximations using the globe
-example.
+Here we illustrate the grid and quadratic approximations using the globe example.  With the grid approach, we begin by creating an R object
+that contains possible values, or "candidate" values, for the parameter being estimated (i.e., the probability that our experiment results
+in a W -- water).  Next, we create a vector containing the prior probabilities for the candidate values and multiply this with the values
+of our likelihood function, evaluated at our candidate values.  The resulting product is an unstandardized posterior, which can easily be
+converted into a proper probability measure by dividing each value by the sum.  Here are two examles with different levels of precision.
+
 
 ```{r, echo = TRUE, include = TRUE}
-p_grid <- seq(0, 1, length = 20)
-#prior <- rep(1, 20)
-prior <- rep(c(1,2,1), c(5,10,5))
-likelihood <- dbinom(6, 9, prob = p_grid)
-unstd_post <- likelihood * prior
-posterior <- unstd_post / sum(unstd_post)
-summary(posterior)
-summary(dbeta(p_grid, 7, 4)/)
-#plot(p_grid, posterior, type = 'b')
-#posterior
-#dbeta(p_grid, 7, 4)/ sum(dbeta(p_grid, 7, 4))
-#lines(p_grid, dbeta(p_grid, 7, 4)/ sum(dbeta(p_grid, 7, 4)), col = 'red')
+cand_1 <- seq(0, 1, length = 5)
+prior_1 <- rep(1, 5)
+like_1 <- dbinom(6, 9, prob = cand_1)
+unstd_post_1 <- like_1 * prior_1
+post_1 <- unstd_post_1 / sum(unstd_post_1)
+
+cand_2 <- seq(0, 1, length = 20)
+prior_2 <- rep(1, 20)
+like_2 <- dbinom(6, 9, prob = cand_2)
+unstd_post_2 <- like_2 * prior_2
+post_2 <- unstd_post_2 / sum(unstd_post_2)
+
+## check out results
+post_true <- dbeta(seq(0, 1, .01), shape1 = 7, shape2 = 4)
+par(oma = c(4,4,4,4))
+plot(cand_1, post_1, type = 'b', main = '5 candidates',
+     xlab = 'prob(W)', ylab ='posterior prob')
+lines(seq(0, 1, .01), post_true * (max(post_1)/max(post_true)), col = 2)
+axis(side = 4, col = 2, col.axis = 2, at = seq(0, .5, .1),
+     lab = round(dbeta(seq(0, .5, .1), 7, 4), 2))
+mtext("true posterior density", side = 4, col = 2, line = 1, outer = TRUE)
+
+par(oma = c(4,4,4,4))
+plot(cand_2, post_2, type = 'b', main = '20 candidates',
+     xlab = 'prob(W)', ylab ='posterior prob')
+lines(seq(0, 1, .01), post_true * (max(post_2)/max(post_true)), col = 2)
+axis(side = 4, col = 2, col.axis = 2, at = seq(0, .14, .02),
+     lab = round(dbeta(seq(0, .14, .02), 7, 4), 5))
+mtext("true posterior density", side = 4, col = 2, line = 1, outer = TRUE)
+
+## predict some new data to show another comparisons...
 ```
 
 # **Chapter 3**
 
 # **Chapter 4**
+
+Quadratix approximation for the basic linear regression...
+
+```{r, include = TRUE, echo = TRUE}
+library(rethinking)
+data(Howell1)
+str(Howell1)
+posterior <- function(x) { # x = c(140, 4)
+  mu_prior <- dnorm(x[1], mean = 178, sd = 20)
+  sd_prior <- dunif(x[2], 0, 50)
+  likelihood <- dnorm(x = Howell1$height[Howell1$age > 18],
+                      mean = x[1], sd = x[2], log = TRUE)
+  logPost <- log(mu_prior) + sum(likelihood) + log(sd_prior)
+  -logPost
+}
+posterior(x = c(140, 40))
+
+result <- optim(par = c(140, 40), fn = posterior, hessian = TRUE)
+result$par
+sqrt(diag(solve(result$hessian)))
+```
+
+How does this do for a skewed posterior?  An example...

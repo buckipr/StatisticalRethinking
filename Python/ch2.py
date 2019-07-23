@@ -5,10 +5,6 @@
 from scipy.stats import beta
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import rc
-
-rc('text',usetex=True)
-rc('text.latex', preamble=r'\usepackage{color}')
 
 # 2.2: Building a model: binomial likelihood with (flat) beta prior
 data22 = ['W', 'L', 'W', 'W', 'W', 'L', 'W', 'L', 'W']
@@ -34,16 +30,17 @@ for i in range(0, len(a) - 1):
     plt.subplot(plotloc)
     plt.plot(pRange, beta.pdf(pRange, a[i], b[i]), 'b--',
              pRange, beta.pdf(pRange, a[i + 1], b[i + 1]), 'r-')
-    plt.ylabel('plausibility')
     plt.axis([0, 1, 0, yMax + .1])
-    plt.title(r'\textcolor{red}{W} ' + r'\textcolor{black}{L W W W L W L W}', fontsize=8)
-    plt.text(.05, yMax - .2, 'n = ' + str(i + 1))
-    # plt.subplot(332)
-    # plt.plot(pRange, beta.pdf(pRange, a1, b1), 'b--',
-    #          pRange, beta.pdf(pRange, a2, b2), 'r-')
-    # plt.title(r'\textcolor{black}{W} ' +
-    #           r'\textcolor{red}{L} ' +
-    #           r'\textcolor{black}{W W W L W L W}', fontsize=8)
-    # plt.text(.05, max(beta.pdf(pRange, a1, b1)) - .15, 'n = 2')
+    plt.tight_layout()
+    if i in [6, 7, 8]:
+        plt.xlabel('proportion of water')
+    if i in [0, 3, 6]:
+        plt.ylabel('plausibility')
+    for j in range(0, len(a) - 1):
+        tmpCol = 'black'
+        if i >= j:
+            tmpCol = 'red'
+        tmpX = .05 + (j + 1) * .09
+        plt.text(tmpX, yMax + .3, data22[j], color=tmpCol)
 plt.show()
 plt.savefig('fig22a.pdf')

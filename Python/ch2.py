@@ -3,6 +3,7 @@
 # Examples and Exercises
 
 from scipy.stats import beta
+from scipy.stats import binom
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -44,3 +45,33 @@ for i in range(0, len(a) - 1):
         plt.text(tmpX, yMax + .3, data22[j], color=tmpCol)
 plt.show()
 plt.savefig('fig22a.pdf')
+
+# Section 2.4: R code 2.3, 2.4, & 2.5
+p_grid = np.arange(0, 1, .05)
+prior = np.repeat(1, 20)
+likelihood = binom.pmf(k = 6, n = 9, p = p_grid)
+unstd_posterior = likelihood * prior
+posterior = unstd_posterior / sum(unstd_posterior)
+plt.plot(p_grid, posterior, 'bo')
+
+prior2 = [0 if x < 0.5 else 1 for x in p_grid]
+unstd_posterior2 = likelihood * prior2
+posterior2 = unstd_posterior2 / sum(unstd_posterior2)
+
+prior3 = np.exp(-5*abs(p_grid - 0.5))
+unstd_posterior3 = likelihood * prior3
+posterior3 = unstd_posterior3 / sum(unstd_posterior3)
+
+plt.figure(1)
+plt.subplot(131)
+plt.plot(p_grid, posterior, 'o-')
+plt.title('flat prior')
+plt.axis([0, 1, 0, .2])
+plt.subplot(132)
+plt.plot(p_grid, posterior2, 'o-')
+plt.axis([0, 1, 0, .2])
+plt.title('0/1 prior')
+plt.subplot(133)
+plt.plot(p_grid, posterior3, 'o-')
+plt.axis([0, 1, 0, .2])
+plt.title('normalish prior')

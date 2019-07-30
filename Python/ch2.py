@@ -4,8 +4,12 @@
 
 from scipy.stats import beta
 from scipy.stats import binom
+from scipy.stats import uniform
+from scipy.optimize import minimize
 import numpy as np
 import matplotlib.pyplot as plt
+import numdifftools as nd
+# maybe check out AlogPy
 
 # 2.2: Building a model: binomial likelihood with (flat) beta prior
 data22 = ['W', 'L', 'W', 'W', 'W', 'L', 'W', 'L', 'W']
@@ -49,10 +53,10 @@ plt.savefig('fig22a.pdf')
 # Section 2.4: R code 2.3, 2.4, & 2.5
 p_grid = np.arange(0, 1, .05)
 prior = np.repeat(1, 20)
-likelihood = binom.pmf(k = 6, n = 9, p = p_grid)
+likelihood = binom.pmf(k=6, n=9, p=p_grid)
 unstd_posterior = likelihood * prior
 posterior = unstd_posterior / sum(unstd_posterior)
-plt.plot(p_grid, posterior, 'bo')
+plt.plot(p_grid, posterior, 'bo-')
 
 prior2 = [0 if x < 0.5 else 1 for x in p_grid]
 unstd_posterior2 = likelihood * prior2
@@ -75,3 +79,12 @@ plt.subplot(133)
 plt.plot(p_grid, posterior3, 'o-')
 plt.axis([0, 1, 0, .2])
 plt.title('normalish prior')
+
+# Section 2.6: quadratic approximation
+def negLogLike ( x ):
+    p = -1 * (binom.logpmf(k=6, n=9, p=x) + uniform.logpdf(x, 0, 1))
+    return p
+
+negLogLike(.4)
+result = minimize(negLogLike, .5, method='nelder-mead', options={'disp':True})
+result.x

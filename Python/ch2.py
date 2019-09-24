@@ -5,6 +5,7 @@
 from scipy.stats import beta
 from scipy.stats import binom
 from scipy.stats import uniform
+from scipy.stats import norm
 from scipy.optimize import minimize
 import numpy as np
 import matplotlib.pyplot as plt
@@ -50,7 +51,7 @@ for i in range(0, len(a) - 1):
 plt.show()
 plt.savefig('fig22a.pdf')
 
-# Section 2.4: R code 2.3, 2.4, & 2.5
+# Section 2.4.3: Grid approximation
 p_grid = np.arange(0, 1, .05)
 prior = np.repeat(1, 20)
 likelihood = binom.pmf(k=6, n=9, p=p_grid)
@@ -80,11 +81,42 @@ plt.plot(p_grid, posterior3, 'o-')
 plt.axis([0, 1, 0, .2])
 plt.title('normalish prior')
 
-# Section 2.6: quadratic approximation
-def negLogLike ( x ):
-    p = -1 * (binom.logpmf(k=6, n=9, p=x) + uniform.logpdf(x, 0, 1))
+# Section 2.4.4: Quadratic approximation
+def negPost (x, *args):
+    nWater = args[0]
+    nTosses = args[1]
+    p = -1 * (binom.logpmf(k=nWater, n=nTosses, p=x) + uniform.logpdf(x, 0, 1))
     return p
+secondDerivPost = nd.Derivative(negPost, n=2, full_output=True)
 
-negLogLike(.4)
-result = minimize(negLogLike, .5, method='nelder-mead', options={'disp':True})
-result.x
+modePost1 = minimize(negPost, x0=.5, args=(6, 9),
+                     method='nelder-mead', options={'disp':True})
+sdPost1 = np.sqrt(1/secondDerivPost(modePost1.x, 6, 9)[0])
+
+modePost2 = minimize(negPost, x0=.5, args=(12, 18),
+                     method='nelder-mead', options={'disp':True})
+sdPost2 = np.sqrt(1/secondDerivPost(modePost2.x, 12, 18)[0])
+
+modePost3 = minimize(negPost, x0=.5, args=(24, 36),
+                     method='nelder-mead', options={'disp':True})
+sdPost3 = np.sqrt(1/secondDerivPost(modePost2.x, 24, 36)[0])
+
+plt.figure(1)
+plt.subplot(131)
+plt.plot(pRange, norm.pdf(pRange, modePost1.x, sdPost1), 'k-',
+         pRange, beta.pdf(pRange, 7, 4), 'b-')
+plt.title('n = 9')
+plt.xlabel('proportion water')
+plt.ylabel('Density')
+plt.subplot(132)
+plt.plot(pRange, norm.pdf(pRange, modePost2.x, sdPost2), 'k-',
+         pRange, beta.pdf(pRange, 13, 7), 'b-')
+plt.title('n = 18')
+plt.xlabel('proportion water')
+plt.subplot(133)
+plt.plot(pRange, norm.pdf(pRange, modePost3.x, sdPost3), 'k-',
+         pRange, beta.pdf(pRange, 25, 13), 'b-')
+plt.title('n = 36')
+plt.xlabel('proportion water')
+
+# Section 2.4.5: MCMC

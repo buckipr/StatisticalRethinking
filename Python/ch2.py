@@ -6,11 +6,12 @@ from scipy.stats import beta
 from scipy.stats import binom
 from scipy.stats import uniform
 from scipy.stats import norm
+from scipy.stats import gaussian_kde
 from scipy.optimize import minimize
 import numpy as np
 import matplotlib.pyplot as plt
 import numdifftools as nd
-# maybe check out AlogPy
+import seaborn as sns
 
 # 2.2: Building a model: binomial likelihood with (flat) beta prior
 data22 = ['W', 'L', 'W', 'W', 'W', 'L', 'W', 'L', 'W']
@@ -120,3 +121,32 @@ plt.title('n = 36')
 plt.xlabel('proportion water')
 
 # Section 2.4.5: MCMC
+n_samples = 1000
+p = np.full((1,n_samples), np.nan)
+p[0, 0] = 0.5
+W = 6
+L = 3
+i = 1
+for i in np.arange(1, n_samples):
+    p_new = np.random.normal(loc=p[0, i-1], scale=.1, size=1)
+    p_new = abs(p_new) if p_new < 0 else p_new
+    p_new = 2 - p_new if p_new > 1 else p_new
+    q0 = binom.pmf(k = W, n = W + L, p = p[0, i-1])
+    q1 = binom.pmf(k=W, n=W + L, p=p_new)
+    p[0, i] = p_new if np.random.uniform(0, 1, 1) < q1/q0 else p[0, i-1]
+
+plt.figure()
+density = gaussian_kde(p)
+plt.plot(pRange, density(pRange), 'k-',
+         pRange, beta.pdf(pRange, 7, 4), 'b-')
+type(p)
+p.shape
+p.reshape((n_samples, 1)).shape
+p.reshape((n_samples)).shape
+p = p.reshape((n_samples))
+plt.figure()
+sns.kdeplot(p, bw=0.5, label = 'MCMC')
+sns.lineplot(pRange, beta.pdf(pRange, 7, 4), label = 'True Posterior')
+plt.title('MCMC estimation for globe example')
+plt.xlabel('probability of W')
+plt.ylabel('density')

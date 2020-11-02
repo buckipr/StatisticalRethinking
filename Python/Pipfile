@@ -6,11 +6,11 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-matplotlib = "*"
-scipy = "*"
-numpy = "*"
+pymc3 = "*"
 numdifftools = "*"
 seaborn = "*"
+notebook = "*"
+p2j = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"

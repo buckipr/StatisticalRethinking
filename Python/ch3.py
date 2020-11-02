@@ -1,6 +1,4 @@
-# Statistical Rethinking
-# Chapter 3: Sampling the Imaginary
-# Examples and Exercises
+### Statistical Rethinking Chapter 3: Sampling the Imaginary Examples and Exercises
 
 import numpy as np
 from scipy.stats import describe
@@ -12,7 +10,7 @@ from scipy.stats import gaussian_kde
 import pymc3 as pm
 from arviz import hdi
 
-## 3.1: Sampling from a grid-approximate posterir
+### 3.1: Sampling from a grid-approximate posterir
 n = 1000
 p_grid = np.arange(0, 1, .001)
 prior = np.repeat(1, n)
@@ -29,7 +27,7 @@ plt.xlabel('proportion water')
 plt.ylabel('Density')
 plt.show()
 
-## 3.2: Sampling to summarize
+### 3.2: Sampling to summarize
 post_summary = describe(post_sample)
 post_summary.nobs
 post_summary.minmax
@@ -54,11 +52,11 @@ plt.show()
 np.argmax(posterior)
 p_grid[np.argmax(posterior)]
 
-### highest posterior density interval [outsourcing :)]
+# highest posterior density interval [outsourcing :)]
 hdi(post_sample, alpha=0.5)
 
-### maybe include exmple with loss function 
+# maybe include exmple with loss function 
 
-## 3.3: Sampling to simulate prediction
+### 3.3: Sampling to simulate prediction
 
-### (nothing new here)
+# (nothing new here)

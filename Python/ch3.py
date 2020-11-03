@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('ggplot')
 from scipy.stats import gaussian_kde
-import pymc3 as pm
 from arviz import hdi
 
 ### 3.1: Sampling from a grid-approximate posterir

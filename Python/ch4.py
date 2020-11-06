@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 style.use('ggplot')
 import seaborn as sns
-import pymc3
+import pymc3 as pm
+import arviz as az
 
 ### 4.3: A Gaussian model of height
 Howell1 = pd.read_csv('Data/Howell1.csv', sep = ';')
@@ -32,7 +33,7 @@ y = np.exp(kde.score_samples(x_plot))
 plt.plot(x_plot, y)
 plt.show()
 
-pymc3.kdeplot(d2)
+pm.kdeplot(d2)
 plt.xlabel('height')
 plt.ylabel('density')
 plt.title('Prior')
@@ -84,20 +85,38 @@ g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
 plt.title('Posterior')
 plt.show()
 
-# pymc3
-size = 50
-true_intercept = 1
-true_slope = 2
-x = np.linspace(0, 1, size)
-y = true_intercept + x*true_slope + np.random.normal(scale=.5, size=size)
-data = {'x': x, 'y': y}
+# pymc3 -- maybe use arviz for posterior analysis
+with pm.Model() as model:
+    # define priors
+    sigma = pm.Uniform('sigma', 0, 50) # sigma = HalfCauchy('sigma', beta=10, testval=1.)
+    intercept = pm.Normal('intercept', 178, sigma=20)
+    # define likelihood
+    likelihood = pm.Normal('d2', mu=intercept, sigma=sigma, observed=d2)
+    # inference
+    trace = pm.sample(3000, cores=2, return_inferencedata=True)
+az.summary(trace)
+pm.traceplot(trace)
+plt.show()
+az.plot_trace(trace['intercept'])
+plt.show()
+az.plot_trace(trace['sigma'])
+plt.show()
 
-with Model() as model:
-    lm = glm.LinearComponent.from_formula('y ~ x', data)
-    sigma = Uniform('sigma', 0, 20)
-    y_obs = Normal('y_obs', mu=lm.y_est, sigma=sigma, observed=y)
-    trace = sample(2000, cores=2)
+az.plot_forest(trace, r_hat=True)
+plt.show()
+az.plot_posterior(trace)
+plt.show()
+az.plot_energy(trace)
+plt.show()
 
-plt.figure(figsize=(5, 5))
-plt.plot(x, y, 'x')
-plot_posterior_predictive_glm(trace)
+with model:
+    post_pred = pm.sample_posterior_predictive(trace.posterior)
+# add posterior predictive to the InferenceData
+with model:
+    az.concat(trace, az.from_pymc3(posterior_predictive=post_pred), inplace=True)
+
+fig, ax = plt.subplots()
+az.plot_ppc(trace, ax=ax)
+#ax.axvline(d2.mean(), ls="--", color="r", label="True mean")
+ax.legend(fontsize=10)
+plt.show()

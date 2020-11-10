@@ -3,6 +3,7 @@
 from scipy.stats import norm
 from scipy.stats import uniform
 from scipy.stats import describe
+from scipy.optimize import minimize
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import KernelDensity
@@ -12,6 +13,7 @@ style.use('ggplot')
 import seaborn as sns
 import pymc3 as pm
 import arviz as az
+import numdifftools as nd
 
 ### 4.3: A Gaussian model of height
 Howell1 = pd.read_csv('Data/Howell1.csv', sep = ';')
@@ -85,7 +87,7 @@ g.plot_marginals(sns.histplot, color="#03051A", alpha=1, bins=25)
 plt.title('Posterior')
 plt.show()
 
-# pymc3 -- maybe use arviz for posterior analysis
+# repeat with pymc3 
 with pm.Model() as model:
     # define priors
     sigma = pm.Uniform('sigma', 0, 50) # sigma = HalfCauchy('sigma', beta=10, testval=1.)
@@ -95,11 +97,13 @@ with pm.Model() as model:
     # inference
     trace = pm.sample(3000, cores=2, return_inferencedata=True)
 az.summary(trace)
+az.summary(trace.posterior['intercept'])
 pm.traceplot(trace)
 plt.show()
-az.plot_trace(trace['intercept'])
+az.plot_trace(trace)
+az.plot_trace(trace, var_names=['intercept'])
 plt.show()
-az.plot_trace(trace['sigma'])
+az.plot_trace(trace, var_names=['sigma'])
 plt.show()
 
 az.plot_forest(trace, r_hat=True)
@@ -108,15 +112,24 @@ az.plot_posterior(trace)
 plt.show()
 az.plot_energy(trace)
 plt.show()
-
-with model:
-    post_pred = pm.sample_posterior_predictive(trace.posterior)
-# add posterior predictive to the InferenceData
-with model:
-    az.concat(trace, az.from_pymc3(posterior_predictive=post_pred), inplace=True)
-
-fig, ax = plt.subplots()
-az.plot_ppc(trace, ax=ax)
-#ax.axvline(d2.mean(), ls="--", color="r", label="True mean")
-ax.legend(fontsize=10)
+az.plot_autocorr(trace, var_names=["intercept", "sigma"]);
 plt.show()
+
+
+# map() by hand
+def negPost (x, *args):
+    y = args[0]
+    p = -1 * sum(norm.logpdf(y,x[0],x[1]))[0] + norm.logpdf(x[0],178,20) + uniform.logpdf(x[1], 0, 50)
+    return p
+negPost((178,3), d2)
+secondDerivPost = nd.Derivative(negPost, n=2, full_output=True)
+
+modePost1 = minimize(negPost, x0=(178,10), args=d2,
+                     method='nelder-mead', options={'disp':True})
+modePost1.success
+modePost1.x
+
+grad = nd.Gradient(negPost)
+grad(list(modePost1.x), d2)
+hess = nd.Hessian(negPost)
+np.sqrt(1/np.diag(hess(list(modePost1.x), d2)))
